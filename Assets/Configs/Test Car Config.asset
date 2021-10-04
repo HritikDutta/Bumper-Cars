@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b2a00042f74c0654b8d89809bd3a4dfe, type: 3}
+  m_Name: Test Car Config
+  m_EditorClassIdentifier: 
+  acceleration: 20
+  deceleration: 10
+  friction: 0.5
+  turnAngle: 7.5
+  turnSpeed: 2.5
+  minTurnSpeed: 0.05
+  maxSteerAngle: 60
