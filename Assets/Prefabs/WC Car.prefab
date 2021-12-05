@@ -1,5 +1,35 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2656838222876010848
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2094427240439046071}
+  m_Layer: 0
+  m_Name: CenterOfMass
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2094427240439046071
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2656838222876010848}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0.272, z: -0.412}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4143801521630733928}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &4143801520070907821
 GameObject:
   m_ObjectHideFlags: 0
@@ -633,7 +663,7 @@ CapsuleCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4143801521628337051}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: 90e4818b84a6e544bb63b8b077472317, type: 2}
   m_IsTrigger: 0
   m_Enabled: 1
   m_Radius: 0.5
@@ -651,6 +681,7 @@ GameObject:
   - component: {fileID: 4143801521630733928}
   - component: {fileID: 4143801521630733942}
   - component: {fileID: 4143801521630733929}
+  - component: {fileID: 1457093839801824975}
   m_Layer: 0
   m_Name: WC Car
   m_TagString: Untagged
@@ -671,6 +702,7 @@ Transform:
   m_Children:
   - {fileID: 4143801521628337048}
   - {fileID: 4143801520179242769}
+  - {fileID: 2094427240439046071}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -687,7 +719,7 @@ Rigidbody:
   m_AngularDrag: 0.05
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 0
+  m_Interpolate: 1
   m_Constraints: 0
   m_CollisionDetection: 0
 --- !u!114 &4143801521630733929
@@ -702,16 +734,43 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b746c003a33e0c045ab0661d0056b65f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  axleInfos:
-  - leftWheel: {fileID: 4143801520199796187}
-    rightWheel: {fileID: 4143801521787972850}
-    properties: -1
-  - leftWheel: {fileID: 4143801520480270572}
-    rightWheel: {fileID: 4143801520070907818}
-    properties: 0
-  maxMotorTorque: 1000
-  maxSteerAngle: 30
+  maxMotorTorque: 1500
+  maxSteerAngle: 15
   turnSlowDownRatio: 0.5
+  centerOfMass: {fileID: 2094427240439046071}
+  axleInfos:
+  - leftWheel:
+      collider: {fileID: 4143801520199796187}
+      visual: {fileID: 4143801521230673840}
+    rightWheel:
+      collider: {fileID: 4143801521787972850}
+      visual: {fileID: 4143801521034437451}
+    properties: -1
+  - leftWheel:
+      collider: {fileID: 4143801520480270572}
+      visual: {fileID: 4143801520572589429}
+    rightWheel:
+      collider: {fileID: 4143801520070907818}
+      visual: {fileID: 4143801521319435641}
+    properties: 0
+  gearRatios:
+  - 1
+  - 2
+  - 4
+  - 8
+  - 16
+--- !u!114 &1457093839801824975
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4143801521630733931}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b8f8ccdbe6d9ea948a8bfe6dc9ad3ea9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &4143801521787972855
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,19 +1,47 @@
 using UnityEngine;
 
-public class PlayerOperator : CarOperator
+public class PlayerOperator : MonoBehaviour, ICarOperator
 {
-	public override float HorizontalInput()
+	private float horizontalInput = 0f;
+	private float verticalInput = 0f;
+	
+	private int requestGearChange = 0;
+	
+	private bool resetInput = false;
+
+	private void Update()
 	{
-		return Input.GetAxisRaw("Horizontal");
+		// Caching values to reduce redundant calculations
+
+		horizontalInput = Input.GetAxisRaw("Horizontal");
+		verticalInput = Input.GetAxisRaw("Vertical");
+		requestGearChange = 0;
+
+		if (Input.GetKeyDown(KeyCode.E))
+			requestGearChange = 1;
+		else if (Input.GetKeyDown(KeyCode.Q))
+			requestGearChange = -1;
+
+		resetInput = Input.GetKeyDown(KeyCode.R);
 	}
 
-	public override float VerticalInput()
+	public float HorizontalInput()
 	{
-		return Input.GetAxisRaw("Vertical");
+		return horizontalInput;
 	}
 
-	public override bool ResetInput()
+	public float VerticalInput()
 	{
-		return Input.GetKeyDown(KeyCode.R);
+		return verticalInput;
+	}
+
+	public bool ResetInput()
+	{
+		return resetInput;
+	}
+
+	public int RequestGearChange()
+	{
+		return requestGearChange;
 	}
 }

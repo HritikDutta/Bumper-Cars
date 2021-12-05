@@ -2,7 +2,7 @@
 
 using UnityEngine;
 
-public class NPCOperator : CarOperator
+public class NPCOperator : MonoBehaviour, ICarOperator
 {
 	[Header("Target")]
 	public Waypoint waypoint;
@@ -47,7 +47,7 @@ public class NPCOperator : CarOperator
 		verticalMovement = waypoint.approachSpeed * waypoint.approachSpeed - carController.currentSpeed * carController.currentSpeed - Mathf.Sign(angleToTarget) * 2f * acceleration * distanceLeft;
 	}
 
-	public override float HorizontalInput()
+	public float HorizontalInput()
 	{
 # if DONT_DRIVE
 		return 0f;
@@ -56,7 +56,7 @@ public class NPCOperator : CarOperator
 # endif
 	}
 
-	public override float VerticalInput()
+	public float VerticalInput()
 	{
 
 #if DONT_DRIVE
@@ -66,9 +66,14 @@ public class NPCOperator : CarOperator
 #endif
 	}
 
-	public override bool ResetInput()
+	public bool ResetInput()
 	{
 		return Input.GetKeyDown(KeyCode.R);
+	}
+
+	public int RequestGearChange()
+	{
+		return 0;
 	}
 
 	private void OnDrawGizmos()

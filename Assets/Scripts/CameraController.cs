@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class CameraController : MonoBehaviour
@@ -7,8 +5,7 @@ public class CameraController : MonoBehaviour
     public Transform target;
     public float followSensitivity = 5f;
 
-    // Update is called once per frame
-    void FixedUpdate()
+    private void Update()
     {
         Vector3 targetPosition = target.position - 4f * target.forward;
         targetPosition.y += 2f;

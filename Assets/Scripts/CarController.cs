@@ -3,7 +3,7 @@ using UnityEngine;
 public class CarController : MonoBehaviour
 {
 	public CarConfig carConfig;
-	public CarOperator carOperator;
+	public ICarOperator carOperator;
 
 	[Header("Car Parts")]
 	public Transform frontAxle;

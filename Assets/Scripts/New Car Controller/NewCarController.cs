@@ -1,6 +1,6 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 [System.Flags]
 public enum AxleProperties
@@ -11,56 +11,111 @@ public enum AxleProperties
 }
 
 [System.Serializable]
+public class WheelInfo
+{
+    public WheelCollider collider;
+    public Transform visual;
+}
+
+[System.Serializable]
 public class AxleInfo
 {
-	public WheelCollider leftWheel;
-    public WheelCollider rightWheel;
+	public WheelInfo leftWheel;
+    public WheelInfo rightWheel;
     public AxleProperties properties;
 }
 
+[RequireComponent(typeof(ICarOperator), typeof(Rigidbody))]
 public class NewCarController : MonoBehaviour
 {
-    public List<AxleInfo> axleInfos;
-    public float maxMotorTorque = 1000f;
-    public float maxSteerAngle = 30f;
+    public float maxMotorTorque = 3000f;
+    public float maxSteerAngle = 15f;
     public float turnSlowDownRatio = .5f;
 
-    public void ApplyLocalPositionToVisuals(WheelCollider collider)
-    {
-        if (collider.transform.childCount == 0)
-            return;
+    public Transform centerOfMass;
 
-        Transform visualWheel = collider.transform.GetChild(0);
+    public List<AxleInfo> axleInfos;
 
-        Vector3 position;
-        Quaternion rotation;
-        collider.GetWorldPose(out position, out rotation);
+    public List<float> gearRatios = new List<float> { 1f, 2f, 4f, 8f, 16f };
+    private int gearIndex = 0;
 
-        visualWheel.transform.position = position;
-        visualWheel.transform.rotation = rotation * Quaternion.Euler(0f, 0f, 90f);
+    private ICarOperator carOperator;
+
+    private Rigidbody rb;
+    private Vector3 startPosition;
+    private Quaternion startRotation;
+
+    private void Awake()
+	{
+        carOperator = GetComponent<ICarOperator>();
+        rb = GetComponent<Rigidbody>();
     }
 
-    private void FixedUpdate()
+	private void Start()
 	{
-        float motor = maxMotorTorque * Input.GetAxis("Vertical");
-        float steering = maxSteerAngle * Input.GetAxis("Horizontal");
+        startPosition = transform.position;
+        startRotation = transform.rotation;
+
+        rb.centerOfMass = centerOfMass.localPosition;
+    }
+
+    private void Update()
+    {
+        if (carOperator.ResetInput())
+		{
+            ResetCar();
+            return;
+		}
+
+        int requestedChange = carOperator.RequestGearChange();
+        gearIndex = Mathf.Clamp(gearIndex + requestedChange, 0, gearRatios.Count - 1);
+    }
+
+    public void ApplyLocalPositionToVisuals(WheelInfo wheel)
+    {
+		wheel.collider.GetWorldPose(out Vector3 position, out Quaternion rotation);
+
+		wheel.visual.position = position;
+        wheel.visual.rotation = rotation * Quaternion.Euler(0f, 0f, 90f);
+    }
+
+	private void FixedUpdate()
+	{
+        float motor = maxMotorTorque * carOperator.VerticalInput();
+        float steering = maxSteerAngle * carOperator.HorizontalInput();
 
         foreach (AxleInfo axleInfo in axleInfos)
 		{
             if ((axleInfo.properties & AxleProperties.STEERING) != 0)
 			{
-                axleInfo.leftWheel.steerAngle = steering;
-                axleInfo.rightWheel.steerAngle = steering;
+                axleInfo.leftWheel.collider.steerAngle = steering;
+                axleInfo.rightWheel.collider.steerAngle = steering;
             }
 
-            if ((axleInfo.properties & AxleProperties.MOTOR) != 0)
-            {
-                axleInfo.leftWheel.motorTorque = motor;
-                axleInfo.rightWheel.motorTorque = motor;
-            }
+            float mult = ((axleInfo.properties & AxleProperties.MOTOR) != 0) ? 1f : 0.25f;
+            axleInfo.leftWheel.collider.motorTorque = mult * motor;
+            axleInfo.rightWheel.collider.motorTorque = mult * motor;
 
             ApplyLocalPositionToVisuals(axleInfo.leftWheel);
             ApplyLocalPositionToVisuals(axleInfo.rightWheel);
         }
 	}
+
+    private void ResetCar()
+    {
+        // To get rid of the warnings
+        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+        rb.isKinematic = true;
+
+        rb.position = startPosition;
+        rb.rotation = startRotation;
+        rb.ResetInertiaTensor();
+        rb.ResetCenterOfMass();
+        rb.velocity = Vector3.zero;
+
+        rb.isKinematic = false;
+        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+
+        gearIndex = 0;
+    }
 }

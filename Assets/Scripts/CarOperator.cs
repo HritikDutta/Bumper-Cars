@@ -1,8 +1,8 @@
-using UnityEngine;
-
-public abstract class CarOperator : MonoBehaviour
+public interface ICarOperator
 {
-	public abstract float VerticalInput();
-	public abstract float HorizontalInput();
-	public abstract bool ResetInput();
+	public float VerticalInput();
+	public float HorizontalInput();
+	public bool ResetInput();
+
+	public int RequestGearChange();
 }
