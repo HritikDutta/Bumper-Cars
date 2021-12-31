@@ -1,13 +1,11 @@
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 [System.Flags]
-public enum AxleProperties
+public enum AxleType
 {
-    NONE     = 0,
-    MOTOR    = 1,
-    STEERING = 2,
+    None     = 0,
+    Motor    = 1,
+    Steering = 2,
 }
 
 [System.Serializable]
@@ -22,100 +20,117 @@ public class AxleInfo
 {
 	public WheelInfo leftWheel;
     public WheelInfo rightWheel;
-    public AxleProperties properties;
+    public AxleType type;
 }
 
 [RequireComponent(typeof(ICarOperator), typeof(Rigidbody))]
 public class NewCarController : MonoBehaviour
 {
-    public float maxMotorTorque = 3000f;
-    public float maxSteerAngle = 15f;
-    public float turnSlowDownRatio = .5f;
+	[Header("Settings")]
+	[SerializeField]
+	private NewCarConfig config;
+	[SerializeField]
+	private Vector3 centerOfMass;
 
-    public Transform centerOfMass;
+	[Header("Car Parts")]
+    [SerializeField]
+    private AxleInfo[] axles;
 
-    public List<AxleInfo> axleInfos;
+    private ICarOperator mCarOperator;
+    private Rigidbody mRigidbody;
 
-    public List<float> gearRatios = new List<float> { 1f, 2f, 4f, 8f, 16f };
-    private int gearIndex = 0;
-
-    private ICarOperator carOperator;
-
-    private Rigidbody rb;
-    private Vector3 startPosition;
-    private Quaternion startRotation;
+	// Reset Settings
+	private Vector3 mStartPosition;
+	private Quaternion mStartRotation;
 
     private void Awake()
 	{
-        carOperator = GetComponent<ICarOperator>();
-        rb = GetComponent<Rigidbody>();
-    }
+        mCarOperator = GetComponent<ICarOperator>();
+        mRigidbody = GetComponent<Rigidbody>();
+
+#if UNITY_EDITOR
+		// Making sure all wheels' visuals have a mesh
+		foreach (AxleInfo axle in axles)
+		{
+			if (axle.leftWheel.visual.GetComponent<MeshRenderer>() == null ||
+				axle.rightWheel.visual.GetComponent<MeshRenderer>() == null)
+			{
+				Debug.LogWarning("Wheel's visual doesn't have a mesh renderer");
+			}
+		}
+#endif
+	}
 
 	private void Start()
 	{
-        startPosition = transform.position;
-        startRotation = transform.rotation;
+		mStartPosition = mRigidbody.position;
+		mStartRotation = mRigidbody.rotation;
 
-        rb.centerOfMass = centerOfMass.localPosition;
-    }
+		ResetCar();
+	}
 
-    private void Update()
-    {
-        if (carOperator.ResetInput())
-		{
-            ResetCar();
-            return;
-		}
+	private void Update()
+	{
+		if (mCarOperator.ResetInput())
+			ResetCar();
+	}
 
-        int requestedChange = carOperator.RequestGearChange();
-        gearIndex = Mathf.Clamp(gearIndex + requestedChange, 0, gearRatios.Count - 1);
-    }
-
-    public void ApplyLocalPositionToVisuals(WheelInfo wheel)
-    {
+	public void ApplyLocalPositionToVisuals(WheelInfo wheel)
+	{
 		wheel.collider.GetWorldPose(out Vector3 position, out Quaternion rotation);
 
 		wheel.visual.position = position;
-        wheel.visual.rotation = rotation * Quaternion.Euler(0f, 0f, 90f);
-    }
+		wheel.visual.rotation = rotation * Quaternion.Euler(0f, 0f, 90f);
+	}
 
 	private void FixedUpdate()
 	{
-        float motor = maxMotorTorque * carOperator.VerticalInput();
-        float steering = maxSteerAngle * carOperator.HorizontalInput();
+		float motor = config.maxMotorTorque * mCarOperator.VerticalInput();
+		float steering = config.maxSteerAngle * mCarOperator.HorizontalInput();
 
-        foreach (AxleInfo axleInfo in axleInfos)
+		foreach (AxleInfo axle in axles)
 		{
-            if ((axleInfo.properties & AxleProperties.STEERING) != 0)
+			if (axle.type.HasFlag(AxleType.Steering))
 			{
-                axleInfo.leftWheel.collider.steerAngle = steering;
-                axleInfo.rightWheel.collider.steerAngle = steering;
-            }
+				axle.leftWheel.collider.steerAngle = steering;
+				axle.rightWheel.collider.steerAngle = steering;
+			}
 
-            float mult = ((axleInfo.properties & AxleProperties.MOTOR) != 0) ? 1f : 0.25f;
-            axleInfo.leftWheel.collider.motorTorque = mult * motor;
-            axleInfo.rightWheel.collider.motorTorque = mult * motor;
+			if (axle.type.HasFlag(AxleType.Motor))
+			{
+				axle.leftWheel.collider.motorTorque = motor;
+				axle.rightWheel.collider.motorTorque = motor;
+			}
 
-            ApplyLocalPositionToVisuals(axleInfo.leftWheel);
-            ApplyLocalPositionToVisuals(axleInfo.rightWheel);
-        }
+			ApplyLocalPositionToVisuals(axle.leftWheel);
+			ApplyLocalPositionToVisuals(axle.rightWheel);
+		}
+
+		// Apply DownForce
+		float downForce = mRigidbody.velocity.sqrMagnitude * mRigidbody.mass;
+		mRigidbody.AddForce(-downForce * transform.up, ForceMode.Force);
 	}
 
-    private void ResetCar()
-    {
-        // To get rid of the warnings
-        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
-        rb.isKinematic = true;
+	private void ResetCar()
+	{
+		// To get rid of the warnings
+		mRigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+		mRigidbody.isKinematic = true;
 
-        rb.position = startPosition;
-        rb.rotation = startRotation;
-        rb.ResetInertiaTensor();
-        rb.ResetCenterOfMass();
-        rb.velocity = Vector3.zero;
+		mRigidbody.position = mStartPosition;
+		mRigidbody.rotation = mStartRotation;
+		mRigidbody.ResetInertiaTensor();
+		mRigidbody.centerOfMass = centerOfMass;
+		mRigidbody.velocity = Vector3.zero;
 
-        rb.isKinematic = false;
-        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+		mRigidbody.isKinematic = false;
+		mRigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+	}
 
-        gearIndex = 0;
-    }
+	private void OnDrawGizmosSelected()
+	{
+		Gizmos.color = Color.blue;
+		Gizmos.matrix = transform.localToWorldMatrix;
+		Gizmos.DrawSphere(centerOfMass, 0.1f);
+	}
 }

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "Car Config", menuName = "Driving/Car Config")]
+[CreateAssetMenu(fileName = "Car Config", menuName = "Car Controller/Old Car Config")]
 public class CarConfig : ScriptableObject
 {
 	public float acceleration = 10f;

@@ -71,11 +71,6 @@ public class NPCOperator : MonoBehaviour, ICarOperator
 		return Input.GetKeyDown(KeyCode.R);
 	}
 
-	public int RequestGearChange()
-	{
-		return 0;
-	}
-
 	private void OnDrawGizmos()
 	{
 		Gizmos.color = Color.green;
